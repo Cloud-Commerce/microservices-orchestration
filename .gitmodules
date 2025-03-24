@@ -1,0 +1,16 @@
+[submodule "service-registry"]
+	path = service-registry
+	url = https://github.com/Cloud-Commerce/service-registry.git
+	branch = main
+[submodule "gateway-service"]
+	path = gateway-service
+	url = https://github.com/Cloud-Commerce/gateway-service.git
+	branch = main
+[submodule "authN-service"]
+	path = authN-service
+	url = https://github.com/Cloud-Commerce/authN-service.git
+	branch = main
+[submodule "authZ-service"]
+	path = authZ-service
+	url = https://github.com/Cloud-Commerce/authZ-service.git
+	branch = main

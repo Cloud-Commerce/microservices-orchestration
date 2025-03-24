@@ -1,0 +1,11 @@
+services:
+  service-registry:
+    build: ./service-registry
+    ports:
+      - "8761:8761"
+    networks:
+      - microservices-network
+
+networks:
+  microservices-network:
+    driver: bridge

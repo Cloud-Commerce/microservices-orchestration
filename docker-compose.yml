@@ -4,8 +4,49 @@ services:
     ports:
       - "8761:8761"
     networks:
-      - microservices-network
+      - ecommerce-net
+
+  auth-db:
+    image: postgres:17.4-alpine
+    container_name: auth-db
+    environment:
+      - POSTGRES_DB=auth_service
+      - POSTGRES_USER=auth_user
+      - POSTGRES_PASSWORD=auth_pass
+    volumes:
+      - auth-data:/var/lib/postgresql/data
+    networks:
+      - ecommerce-net
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U auth_user -d auth_service" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  authn-service:
+    build: ./authN-service
+    ports:
+      - "8501:8501"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://auth-db:5432/auth_service
+      - SPRING_DATASOURCE_USERNAME=auth_user
+      - SPRING_DATASOURCE_PASSWORD=auth_pass
+    depends_on:
+      auth-db:
+        condition: service_healthy
+      service-registry:
+        condition: service_started
+    networks:
+      - ecommerce-net
+
+volumes:
+  auth-data:
 
 networks:
-  microservices-network:
+  ecommerce-net:
     driver: bridge

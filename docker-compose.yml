@@ -8,7 +8,6 @@ services:
 
   auth-db:
     image: postgres:17.4-alpine
-    container_name: auth-db
     environment:
       - POSTGRES_DB=auth_service
       - POSTGRES_USER=auth_user
@@ -26,6 +25,25 @@ services:
       retries: 5
     restart: unless-stopped
 
+  redis:
+    image: redis:7.4-alpine  # Lightweight Redis 7.4
+    ports:
+      - "6379:6379"  # Expose Redis port
+#    environment:
+#      - REDIS_PASSWORD=mypassword  # Enable auth (optional)
+#      - REDIS_USERNAME=myuser      # Redis 6+ ACL (optional)
+    volumes:
+      - redis_data:/data  # Persist data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf:ro  # Custom config
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]  # Load config
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+    networks:
+      - ecommerce-net
+
   authn-service:
     build: ./authN-service
     ports:
@@ -36,16 +54,20 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://auth-db:5432/auth_service
       - SPRING_DATASOURCE_USERNAME=auth_user
       - SPRING_DATASOURCE_PASSWORD=auth_pass
+      - REDIS_DATASOURCE_URL=redis://redis:6379
     depends_on:
       auth-db:
         condition: service_healthy
       service-registry:
+        condition: service_started
+      redis:
         condition: service_started
     networks:
       - ecommerce-net
 
 volumes:
   auth-data:
+  redis_data:  # Named volume for Redis persistence
 
 networks:
   ecommerce-net:

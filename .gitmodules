@@ -10,7 +10,7 @@
 	path = authN-service
 	url = https://github.com/Cloud-Commerce/authN-service.git
 	branch = main
-[submodule "authZ-service"]
-	path = authZ-service
-	url = https://github.com/Cloud-Commerce/authZ-service.git
+[submodule "authZ-lib"]
+	path = authZ-lib
+	url = https://github.com/Cloud-Commerce/authZ-lib.git
 	branch = main

@@ -1,0 +1,197 @@
+{
+	"info": {
+		"_postman_id": "419b6196-4a86-eae5-1082-b3863ebfb111",
+		"name": "Cloud Commerce",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "6963824"
+	},
+	"item": [
+		{
+			"name": "Signup",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJtc2VjIiwic3RheUxvZ2dlZEluIjpmYWxzZSwiZXhwIjoxNjE4MTAyNTQ4LCJpYXQiOjE2MTgwNjY1NDh9.EhmNSMxN56CMpeoiGMRuEkobQqMgXaQB0IKi2QC2Fsc",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"{{username}}\",\n    \"password\": \"{{oldPassword}}\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8501/api/auth/signup",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8501",
+					"path": [
+						"api",
+						"auth",
+						"signup"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Login",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// 1. Parse the JSON response\r",
+							"const response = pm.response.json();\r",
+							"\r",
+							"// 2. Extract token (assuming response has { \"token\": \"xyz\" } structure)\r",
+							"const token = response.token;\r",
+							"\r",
+							"// 3. Validate token exists\r",
+							"if (token) {\r",
+							"    // 4. Set as environment variable\r",
+							"    pm.environment.set(\"token\", token);\r",
+							"    console.log(\"Token saved:\", token);\r",
+							"} else {\r",
+							"    console.error(\"No token found in response\");\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJtc2VjIiwic3RheUxvZ2dlZEluIjpmYWxzZSwiZXhwIjoxNjE4MTAyNTQ4LCJpYXQiOjE2MTgwNjY1NDh9.EhmNSMxN56CMpeoiGMRuEkobQqMgXaQB0IKi2QC2Fsc",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"{{username}}\",\n    \"password\": \"{{oldPassword}}\"\n}\n"
+				},
+				"url": {
+					"raw": "http://localhost:8501/api/auth/login",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8501",
+					"path": [
+						"api",
+						"auth",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Logout",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"{{username}}\",\n    \"password\": \"ecom_pass\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8501/api/auth/logout",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8501",
+					"path": [
+						"api",
+						"auth",
+						"logout"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Change Password",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"oldPassword\": \"{{oldPassword}}\",\n    \"newPassword\": \"ecom_pass1\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8501/api/auth/change-password",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8501",
+					"path": [
+						"api",
+						"auth",
+						"change-password"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}

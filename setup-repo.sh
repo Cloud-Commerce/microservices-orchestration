@@ -10,6 +10,7 @@ SUBMODULES=(
     "https://github.com/Cloud-Commerce/gateway-service.git" "main" "gateway-service"
     "https://github.com/Cloud-Commerce/authN-service.git" "main" "authN-service"
 	"https://github.com/Cloud-Commerce/authZ-lib.git" "main" "authZ-lib"
+	"https://github.com/Cloud-Commerce/user-service.git" "main" "user-service"
 )
 
 # Clone the parent repository with the specified branch

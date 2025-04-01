@@ -14,3 +14,7 @@
 	path = authZ-lib
 	url = https://github.com/Cloud-Commerce/authZ-lib.git
 	branch = main
+[submodule "user-service"]
+	path = user-service
+	url = https://github.com/Cloud-Commerce/user-service.git
+	branch = main

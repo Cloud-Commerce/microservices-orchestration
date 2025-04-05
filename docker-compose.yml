@@ -1,25 +1,26 @@
 services:
   service-registry:
     build: ./service-registry
+    image: service-registry:latest
     ports:
       - "8761:8761"
     networks:
       - ecommerce-net
 
-  auth-db:
+  user-db:
     image: postgres:17.4-alpine
     environment:
-      - POSTGRES_DB=auth_service
-      - POSTGRES_USER=auth_user
-      - POSTGRES_PASSWORD=auth_pass
+      - POSTGRES_DB=user_db
+      - POSTGRES_USER=user_db_user
+      - POSTGRES_PASSWORD=user_db_pass
     volumes:
-      - auth-data:/var/lib/postgresql/data
+      - user-data:/var/lib/postgresql/data
     networks:
       - ecommerce-net
     ports:
       - "5432:5432"
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U auth_user -d auth_service" ]
+      test: [ "CMD-SHELL", "pg_isready -U user_db_user -d user_db" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -46,18 +47,14 @@ services:
 
   authn-service:
     build: ./authN-service
+    image: authn-service:latest
     ports:
       - "8501:8501"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://auth-db:5432/auth_service
-      - SPRING_DATASOURCE_USERNAME=auth_user
-      - SPRING_DATASOURCE_PASSWORD=auth_pass
       - REDIS_DATASOURCE_URL=redis://redis:6379
     depends_on:
-      auth-db:
-        condition: service_healthy
       service-registry:
         condition: service_started
       redis:
@@ -65,8 +62,27 @@ services:
     networks:
       - ecommerce-net
 
+  user-service:
+    build: ./user-service
+    image: user-service:latest
+    ports:
+      - "8503:8503"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://user-db:5432/user_db
+      - SPRING_DATASOURCE_USERNAME=user_db_user
+      - SPRING_DATASOURCE_PASSWORD=user_db_pass
+    depends_on:
+      user-db:
+        condition: service_healthy
+      service-registry:
+        condition: service_started
+    networks:
+      - ecommerce-net
+
 volumes:
-  auth-data:
+  user-data:
   redis_data:  # Named volume for Redis persistence
 
 networks:

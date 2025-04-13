@@ -1,3 +1,4 @@
+```mermaid
 graph TD
     C[Client] --> G[Gateway Service]
     G -->|AuthZ Lib| H[Hazelcast/Redis Cache 5min]
@@ -18,3 +19,4 @@ graph TD
     subgraph Data Services
         U --> DB[(User DB)]
     end
+```

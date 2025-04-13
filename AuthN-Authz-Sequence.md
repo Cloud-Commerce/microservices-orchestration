@@ -1,82 +1,102 @@
 ```mermaid
+%% Complete Authentication/Authorization Flow
 sequenceDiagram
     box "External"
         participant C as Client
     end
     box "Trusted Zone"
         participant G as Gateway
-        participant A as AuthN Service
-        participant S1 as Service 1
-        participant S2 as Service 2
+        participant A as AuthN
+        participant U as UserService
+        participant S as OtherServices
         participant R as Redis
-        participant H as Gateway Cache
+        participant H as GatewayCache
     end
 
-    %% ===== CLIENT-FACING FLOWS =====
-    %% Signup
+    %% ----- Core Flows -----
+    %% 1. Signup
     C->>G: POST /signup
     G->>A: Forward (X-Gateway-Trusted)
-    A->>S1: Create user
-    S1-->>A: Success
+    A->>U: Create user
+    U-->>A: Success
     A-->>G: 201
     G-->>C: User created
 
-    %% Login
+    %% 2. Login
     C->>G: POST /login
     G->>A: Forward (X-Gateway-Trusted)
-    A->>S1: Verify credentials
-    S1-->>A: User details
+    A->>U: Verify credentials
+    U-->>A: User details
     A->>A: Generate JWT (15min)
-    A->>R: Set session (7d TTL)
+    A->>R: SET session:{jwt}<br>EXPIRE 7d
     A-->>G: JWT + claims
-    G->>H: Cache claims (5min)
+    G->>H: SETEX claims:{jwt} 5min
     G-->>C: Set-Cookie: JWT
 
-    %% Authenticated Request
-    C->>G: GET /resource (with JWT)
-    alt Cached
-        G->>H: Get claims
+    %% 3. Authenticated Request
+    C->>G: GET /resource (JWT)
+    alt Cached claims
+        G->>H: GET claims:{jwt}
         H-->>G: Valid claims
-    else Not Cached
+    else Verify
         G->>A: Verify JWT
-        A->>R: Check session
+        A->>R: GET session:{jwt}
         R-->>A: Valid
-        A->>R: Reset TTL (7d)
+        A->>R: EXPIRE session:{jwt} 7d
         A-->>G: Claims
-        G->>H: Cache claims (5min)
+        G->>H: SETEX claims:{jwt} 5min
     end
-    G->>S2: Forward (X-Gateway-Trusted)
-    S2-->>G: Data
+    G->>S: Forward request
+    S-->>G: Data
     G-->>C: Response
 
-    %% ===== SERVICE-TO-SERVICE FLOWS =====
-    S1->>S2: GET /internal/data
-    Note right of S1: X-Service-ID: s1<br>X-Timestamp: t<br>X-Sig: HMAC(s1+t+path+salt)
-    S2->>S2: Validate HMAC & freshness
-    alt Valid
-        S2-->>S1: 200 + Data
-    else Invalid
-        S2-->>S1: 401
+    %% ----- Security Operations -----
+    %% 4. Change Password
+    C->>G: PUT /change-password (JWT)
+    G->>A: Verify JWT
+    A->>U: Update password
+    U->>R: SCAN sessions:user:{id}
+    loop All sessions
+        R->>R: DEL session:{jwt}
     end
-
-    %% ===== SECURITY OPERATIONS =====
-    %% Logout
-    C->>G: POST /logout
-    G->>A: Invalidate JWT
-    A->>R: Delete session
-    A-->>G: ACK
-    G->>H: Clear cache
+    A-->>G: Success
+    G->>H: SCAN claims:user:{id}
+    loop All caches
+        H->>H: DEL claims:{jwt}
+    end
     G-->>C: 200
 
-    %% Token Refresh
+    %% 5. Logout
+    C->>G: POST /logout (JWT)
+    G->>A: Invalidate
+    A->>R: DEL session:{jwt}
+    A-->>G: ACK
+    G->>H: DEL claims:{jwt}
+    G-->>C: 200
+
+    %% 6. Token Refresh
     C->>G: Expired JWT
     G->>A: Verify client metadata
-    alt Valid
+    alt Metadata matches
+        A->>R: GET session_metadata:{jwt}
+        R-->>A: Client fingerprint
         A->>A: New JWT
-        A->>R: Update session
+        A->>R: SET session:{new_jwt}<br>EXPIRE 7d
+        A->>R: DEL session:{old_jwt}
         A-->>G: New JWT
+        G->>H: SETEX claims:{new_jwt} 5min
         G-->>C: 200 + New JWT
+    else Mismatch
+        A-->>G: 401
+        G-->>C: Force re-login
+    end
+
+    %% 7. Service-to-Service Auth
+    S->>S: Internal request
+    Note right of S: Headers:<br>X-Service-ID: caller<br>X-Timestamp: [now]<br>X-Sig: HMAC(salt+path+ts)
+    alt Valid HMAC
+        S-->>S: Process request
     else Invalid
-        G-->>C: 401
+        S-->>S: 401
     end
 ```

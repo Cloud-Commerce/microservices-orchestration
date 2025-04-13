@@ -1,3 +1,4 @@
+```mermaid
 %% Authentication and Authorization Architecture for eCommerce Retail
 sequenceDiagram
     participant C as Client
@@ -71,3 +72,4 @@ sequenceDiagram
     A->>G: Notification
     G->>H: Bulk cache invalidation
     G-->>C: 200 OK
+```

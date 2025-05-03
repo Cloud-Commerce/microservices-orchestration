@@ -66,7 +66,7 @@ services:
     build: ./gateway-service
     image: gateway-service:latest
     ports:
-      - "8502:8502"
+      - "8500:8500"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka
@@ -83,7 +83,7 @@ services:
     build: ./user-service
     image: user-service:latest
     ports:
-      - "8503:8503"
+      - "8502:8502"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka
